@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS capacities (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    description VARCHAR(90)
+);
+
+CREATE TABLE IF NOT EXISTS capacity_bootcamp (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    capacity_id BIGINT NOT NULL,
+    bootcamp_id BIGINT NOT NULL
+);
