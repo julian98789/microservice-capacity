@@ -1,7 +1,9 @@
 package com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter;
 
 import com.capacity.microservice_capacity.domain.model.CapacityBootcamp;
+import com.capacity.microservice_capacity.domain.model.CapacityBootcampCount;
 import com.capacity.microservice_capacity.domain.spi.ICapacityBootcampPersistencePort;
+import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.entity.CapacityBootcampEntity;
 import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.mapper.ICapacityBootcampEntityMapper;
 import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.repository.ICapacityBootcampRepository;
 import lombok.AllArgsConstructor;
@@ -36,5 +38,15 @@ public class CapacityBootcampPersistenceAdapter implements ICapacityBootcampPers
     public Flux<CapacityBootcamp> findByBootcampId(Long bootcampId) {
         return repository.findByBootcampId(bootcampId)
                 .map(mapper::toModel);
+    }
+
+    @Override
+    public Flux<CapacityBootcampCount> getAllBootcampRelationCounts() {
+        return repository.findAll()
+                .groupBy(CapacityBootcampEntity::getBootcampId)
+                .flatMap(groupedFlux ->
+                        groupedFlux.count()
+                                .map(count -> new CapacityBootcampCount(groupedFlux.key(), count))
+                );
     }
 }

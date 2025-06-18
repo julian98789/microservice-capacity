@@ -5,6 +5,8 @@ import com.capacity.microservice_capacity.domain.enums.TechnicalMessage;
 import com.capacity.microservice_capacity.domain.exceptions.BusinessException;
 import com.capacity.microservice_capacity.domain.exceptions.TechnicalException;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.dto.CapacityBootcampAssociateRequestDTO;
+import com.capacity.microservice_capacity.infrastructure.entrypoints.dto.CapacityBootcampCountDTO;
+import com.capacity.microservice_capacity.infrastructure.entrypoints.mapper.ICapacityWithTechnologiesMapper;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.util.APIResponse;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.util.ErrorDTO;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,8 @@ import java.util.List;
 public class CapacityBootcampHandlerImpl {
 
     private final ICapacityBootcampServicePort service;
+    private final ICapacityWithTechnologiesMapper capacityWithTechnologiesMapper;
+
 
     public Mono<ServerResponse> associateCapacityBootcamp(ServerRequest request) {
         return request.bodyToMono(CapacityBootcampAssociateRequestDTO.class)
@@ -45,6 +49,31 @@ public class CapacityBootcampHandlerImpl {
                                 .message(ex.getTechnicalMessage().getMessage())
                                 .param(ex.getTechnicalMessage().getParam())
                                 .build())))
+                .onErrorResume(ex -> {
+                    log.error("Unexpected error occurred", ex);
+                    return buildErrorResponse(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            TechnicalMessage.INTERNAL_ERROR,
+                            List.of(ErrorDTO.builder()
+                                    .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                    .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                    .build()));
+                });
+    }
+
+    public Mono<ServerResponse> getAllBootcampRelationCounts(ServerRequest request) {
+        return service.getAllBootcampRelationCounts()
+                .map(crc -> new CapacityBootcampCountDTO(crc.bootcampId(), crc.relationCount()))
+                .collectList()
+                .flatMap(list -> ServerResponse.ok().bodyValue(list));
+    }
+
+    public Mono<ServerResponse> getCapacitiesAndTechnologiesByBootcamp(ServerRequest request) {
+        Long bootcampId = Long.valueOf(request.queryParam("bootcampId").orElseThrow());
+        return service.getCapacitiesWithTechnologiesByBootcamp(bootcampId)
+                .map(capacityWithTechnologiesMapper::toDTO)
+                .collectList()
+                .flatMap(ServerResponse.ok()::bodyValue)
                 .onErrorResume(ex -> {
                     log.error("Unexpected error occurred", ex);
                     return buildErrorResponse(

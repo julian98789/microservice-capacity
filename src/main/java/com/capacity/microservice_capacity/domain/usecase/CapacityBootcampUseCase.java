@@ -4,8 +4,11 @@ import com.capacity.microservice_capacity.domain.api.ICapacityBootcampServicePor
 import com.capacity.microservice_capacity.domain.enums.TechnicalMessage;
 import com.capacity.microservice_capacity.domain.exceptions.BusinessException;
 import com.capacity.microservice_capacity.domain.model.CapacityBootcamp;
+import com.capacity.microservice_capacity.domain.model.CapacityBootcampCount;
+import com.capacity.microservice_capacity.domain.model.CapacityWithTechnologies;
 import com.capacity.microservice_capacity.domain.spi.ICapacityBootcampPersistencePort;
 import com.capacity.microservice_capacity.domain.spi.ICapacityPersistencePort;
+import com.capacity.microservice_capacity.domain.spi.ICapacityQueryPort;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -17,11 +20,13 @@ public class CapacityBootcampUseCase implements ICapacityBootcampServicePort {
 
     private final ICapacityBootcampPersistencePort capacityBootcampPersistencePort;
     private final ICapacityPersistencePort capacityPersistencePort;
+    private final ICapacityQueryPort capacityQueryPort;
 
     public CapacityBootcampUseCase(ICapacityBootcampPersistencePort capacityBootcampPersistencePort,
-                                   ICapacityPersistencePort capacityPersistencePort) {
+                                   ICapacityPersistencePort capacityPersistencePort, ICapacityQueryPort capacityQueryPort) {
         this.capacityBootcampPersistencePort = capacityBootcampPersistencePort;
         this.capacityPersistencePort = capacityPersistencePort;
+        this.capacityQueryPort = capacityQueryPort;
     }
 
     @Override
@@ -32,6 +37,19 @@ public class CapacityBootcampUseCase implements ICapacityBootcampServicePort {
                 .then(validateLimitNotExceeded(capacityIds, bootcampId))
                 .flatMap(newAssociations ->
                         capacityBootcampPersistencePort.saveAll(newAssociations).thenReturn(true));
+    }
+
+    @Override
+    public Flux<CapacityBootcampCount> getAllBootcampRelationCounts() {
+        return capacityBootcampPersistencePort.getAllBootcampRelationCounts();
+    }
+
+    @Override
+    public Flux<CapacityWithTechnologies> getCapacitiesWithTechnologiesByBootcamp(Long bootcampId) {
+        return capacityBootcampPersistencePort.findByBootcampId(bootcampId)
+                .map(CapacityBootcamp::capacityId)
+                .collectList()
+                .flatMapMany(capacityQueryPort::findAllWithTechnologiesByIds);
     }
 
     private Mono<Void> validateNoDuplicates(List<Long> technologyIds) {

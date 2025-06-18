@@ -1,4 +1,4 @@
-package com.capacity.microservice_capacity.infrastructure;
+package com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter;
 
 import com.capacity.microservice_capacity.domain.model.CapacityWithTechnologies;
 import com.capacity.microservice_capacity.domain.model.TechnologySummary;
@@ -50,6 +50,22 @@ public class CapacityQueryAdapter implements ICapacityQueryPort {
                 .flatMap(this::addTechnologies)
         );
     }
+
+    @Override
+    public Flux<CapacityWithTechnologies> findAllWithTechnologiesByIds(List<Long> capacityIds) {
+        return capacityRepository.findAllById(capacityIds)
+                .flatMap(entity ->
+                        addTechnologies(new CapacityWithTechnologies(
+                                entity.getId(),
+                                entity.getName(),
+                                entity.getDescription(),
+                                null,
+                                List.of()
+                        ))
+                );
+    }
+
+
 
     private Comparator<CapacityWithTechnologies> getComparator(String sortBy, String direction) {
         Comparator<CapacityWithTechnologies> comparator = sortBy.equals("technologyCount")

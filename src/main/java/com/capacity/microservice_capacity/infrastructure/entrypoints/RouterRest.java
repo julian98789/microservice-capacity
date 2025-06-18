@@ -53,6 +53,12 @@ public class RouterRest {
         return route(POST("/capacity"), technologyHandler::createCapacity)
                 .andRoute(GET("/capacity/list"), technologyHandler::listCapacities)
                 .andRoute(POST("/capacity/bootcamp/associate"),
-                        capacityBootcampHandler::associateCapacityBootcamp);
+                        capacityBootcampHandler::associateCapacityBootcamp)
+                .andRoute(
+                    GET("/capacity/bootcamp/relation-counts"),
+                        capacityBootcampHandler::getAllBootcampRelationCounts)
+                .andRoute(
+                        GET("/capacity/bootcamp/capacities-technologies"),
+                        capacityBootcampHandler::getCapacitiesAndTechnologiesByBootcamp);
     }
 }

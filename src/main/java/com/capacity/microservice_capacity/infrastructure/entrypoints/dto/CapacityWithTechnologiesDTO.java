@@ -10,7 +10,5 @@ import java.util.List;
 public class CapacityWithTechnologiesDTO {
     private Long id;
     private String name;
-    private String description;
-    private Long technologyCount;
     private List<TechnologySummaryDTO> technologies;
 }

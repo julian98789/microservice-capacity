@@ -54,9 +54,13 @@ public class UseCasesConfig {
         @Bean
         public ICapacityBootcampServicePort capacityBootcampServicePort(
                 ICapacityBootcampPersistencePort capacityBootcampPersistencePort,
-                ICapacityPersistencePort capacityPersistencePort
+                ICapacityPersistencePort capacityPersistencePort,
+                ICapacityQueryPort capacityQueryPort
         ){
-                return new CapacityBootcampUseCase(capacityBootcampPersistencePort,capacityPersistencePort);
+                return new CapacityBootcampUseCase(
+                        capacityBootcampPersistencePort,
+                        capacityPersistencePort,
+                        capacityQueryPort);
         }
 
 

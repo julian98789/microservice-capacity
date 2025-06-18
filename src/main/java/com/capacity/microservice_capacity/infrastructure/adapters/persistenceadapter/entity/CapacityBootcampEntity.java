@@ -20,6 +20,6 @@ public class CapacityBootcampEntity {
     private Long capacityId;
 
     @Column("bootcamp_id")
-    private Long bootcampId; // <--- no uses bootcampId, usa bootcampId
+    private Long bootcampId;
 
 }
