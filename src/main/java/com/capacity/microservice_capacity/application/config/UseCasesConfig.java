@@ -55,12 +55,14 @@ public class UseCasesConfig {
         public ICapacityBootcampServicePort capacityBootcampServicePort(
                 ICapacityBootcampPersistencePort capacityBootcampPersistencePort,
                 ICapacityPersistencePort capacityPersistencePort,
-                ICapacityQueryPort capacityQueryPort
+                ICapacityQueryPort capacityQueryPort,
+                ITechnologyAssociationPort technologyAssociationPort
         ){
                 return new CapacityBootcampUseCase(
                         capacityBootcampPersistencePort,
                         capacityPersistencePort,
-                        capacityQueryPort);
+                        capacityQueryPort,
+                        technologyAssociationPort);
         }
 
 

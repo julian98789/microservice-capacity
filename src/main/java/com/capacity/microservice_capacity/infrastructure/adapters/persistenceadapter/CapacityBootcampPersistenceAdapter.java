@@ -7,6 +7,7 @@ import com.capacity.microservice_capacity.infrastructure.adapters.persistenceada
 import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.mapper.ICapacityBootcampEntityMapper;
 import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.repository.ICapacityBootcampRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -48,5 +49,11 @@ public class CapacityBootcampPersistenceAdapter implements ICapacityBootcampPers
                         groupedFlux.count()
                                 .map(count -> new CapacityBootcampCount(groupedFlux.key(), count))
                 );
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteByCapacityIdAndBootcampId(Long capacityId, Long bootcampId) {
+        return repository.deleteByCapacityIdAndBootcampId(capacityId, bootcampId);
     }
 }

@@ -13,5 +13,7 @@ public interface ICapacityBootcampPersistencePort {
     Flux<CapacityBootcamp> findByCapacityIds(List<Long> capacityIds);
     Flux<CapacityBootcamp> findByBootcampId(Long bootcampId);
     Flux<CapacityBootcampCount> getAllBootcampRelationCounts();
+    Mono<Void> deleteByCapacityIdAndBootcampId(Long capacityId, Long bootcampId);
+
 
 }

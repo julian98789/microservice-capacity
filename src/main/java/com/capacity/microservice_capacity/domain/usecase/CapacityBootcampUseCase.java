@@ -9,6 +9,7 @@ import com.capacity.microservice_capacity.domain.model.CapacityWithTechnologies;
 import com.capacity.microservice_capacity.domain.spi.ICapacityBootcampPersistencePort;
 import com.capacity.microservice_capacity.domain.spi.ICapacityPersistencePort;
 import com.capacity.microservice_capacity.domain.spi.ICapacityQueryPort;
+import com.capacity.microservice_capacity.domain.spi.ITechnologyAssociationPort;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,12 +22,16 @@ public class CapacityBootcampUseCase implements ICapacityBootcampServicePort {
     private final ICapacityBootcampPersistencePort capacityBootcampPersistencePort;
     private final ICapacityPersistencePort capacityPersistencePort;
     private final ICapacityQueryPort capacityQueryPort;
+    private final ITechnologyAssociationPort technologyAssociationPort;
 
     public CapacityBootcampUseCase(ICapacityBootcampPersistencePort capacityBootcampPersistencePort,
-                                   ICapacityPersistencePort capacityPersistencePort, ICapacityQueryPort capacityQueryPort) {
+                                   ICapacityPersistencePort capacityPersistencePort,
+                                   ICapacityQueryPort capacityQueryPort,
+                                   ITechnologyAssociationPort technologyAssociationPort) {
         this.capacityBootcampPersistencePort = capacityBootcampPersistencePort;
         this.capacityPersistencePort = capacityPersistencePort;
         this.capacityQueryPort = capacityQueryPort;
+        this.technologyAssociationPort = technologyAssociationPort;
     }
 
     @Override
@@ -50,6 +55,34 @@ public class CapacityBootcampUseCase implements ICapacityBootcampServicePort {
                 .map(CapacityBootcamp::capacityId)
                 .collectList()
                 .flatMapMany(capacityQueryPort::findAllWithTechnologiesByIds);
+    }
+
+    @Override
+    public Mono<Void> deleteCapacitiesExclusivelyByBootcampId(Long bootcampId) {
+        return capacityBootcampPersistencePort.findByBootcampId(bootcampId)
+                .map(CapacityBootcamp::capacityId)
+                .distinct()
+                .collectList()
+                .flatMapMany(capacityIds -> Flux.fromIterable(capacityIds)
+                        .flatMap(capacityId ->
+                                capacityBootcampPersistencePort.findByCapacityIds(List.of(capacityId))
+                                        .map(CapacityBootcamp::bootcampId)
+                                        .distinct()
+                                        .collectList()
+                                        .flatMap(bootcampIds -> {
+                                            if (bootcampIds.size() == 1 && bootcampIds.get(0).equals(bootcampId)) {
+                                                // Solo asociada a este bootcamp: eliminar capacidad, relación, y tecnologías asociadas
+                                                return technologyAssociationPort.deleteTechnologiesExclusivelyByCapacityId(capacityId)
+                                                        .then(capacityPersistencePort.deleteById(capacityId))
+                                                        .then(capacityBootcampPersistencePort.deleteByCapacityIdAndBootcampId(capacityId, bootcampId));
+                                            } else {
+                                                // Asociada a varios bootcamps: solo elimina la relación
+                                                return capacityBootcampPersistencePort.deleteByCapacityIdAndBootcampId(capacityId, bootcampId);
+                                            }
+                                        })
+                        )
+                )
+                .then();
     }
 
     private Mono<Void> validateNoDuplicates(List<Long> technologyIds) {

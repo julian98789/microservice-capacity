@@ -11,4 +11,5 @@ public interface ICapacityBootcampServicePort {
     Mono<Boolean> associateCapabilityToBootcamp(List<Long> capacityIds, Long bootcampId);
     Flux<CapacityBootcampCount> getAllBootcampRelationCounts();
     Flux<CapacityWithTechnologies> getCapacitiesWithTechnologiesByBootcamp(Long bootcampId);
+    Mono<Void> deleteCapacitiesExclusivelyByBootcampId(Long bootcampId);
 }

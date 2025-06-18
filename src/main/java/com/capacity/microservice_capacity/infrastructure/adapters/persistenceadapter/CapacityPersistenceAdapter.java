@@ -6,6 +6,7 @@ import com.capacity.microservice_capacity.infrastructure.adapters.persistenceada
 import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.mapper.ICapacityEntityMapper;
 import com.capacity.microservice_capacity.infrastructure.adapters.persistenceadapter.repository.ICapacityRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
@@ -29,6 +30,7 @@ public class CapacityPersistenceAdapter implements ICapacityPersistencePort {
     }
 
     @Override
+    @Transactional
     public Mono<Void> deleteById(Long id) {
         return capacityRepository.deleteById(id);
     }

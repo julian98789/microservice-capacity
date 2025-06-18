@@ -36,4 +36,13 @@ public class TechnologyAssociationAdapter implements ITechnologyAssociationPort 
                 .map(response -> true)
                 .onErrorResume(e -> Mono.just(false));
     }
+
+
+    @Override
+    public Mono<Void> deleteTechnologiesExclusivelyByCapacityId(Long capacityId) {
+        return webClient.delete()
+                .uri(technologyServiceUrl + "/technology/capability/{capabilityId}/exclusive-delete", capacityId)
+                .retrieve()
+                .bodyToMono(Void.class);
+    }
 }

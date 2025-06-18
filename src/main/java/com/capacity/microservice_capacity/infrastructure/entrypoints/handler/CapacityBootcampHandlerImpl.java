@@ -86,6 +86,18 @@ public class CapacityBootcampHandlerImpl {
                 });
     }
 
+    public Mono<ServerResponse> deleteCapacitiesByBootcampId(ServerRequest request) {
+        Long bootcampId = Long.parseLong(request.pathVariable("bootcampId"));
+        return service
+                .deleteCapacitiesExclusivelyByBootcampId(bootcampId)
+                .then(ServerResponse.noContent().build())
+                .onErrorResume(ex -> {
+                    log.error("Unexpected error occurred", ex);
+                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .bodyValue("Error deleting capacities: " + ex.getMessage());
+                });
+    }
+
     private Mono<ServerResponse> buildErrorResponse(HttpStatus httpStatus,  TechnicalMessage error,
                                                     List<ErrorDTO> errors) {
         return Mono.defer(() -> {
