@@ -49,16 +49,15 @@ public class CapacityBootcampHandlerImpl {
                                 .message(ex.getTechnicalMessage().getMessage())
                                 .param(ex.getTechnicalMessage().getParam())
                                 .build())))
-                .onErrorResume(ex -> {
-                    log.error("Unexpected error occurred", ex);
-                    return buildErrorResponse(
+                .onErrorResume(ex ->
+                     buildErrorResponse(
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             TechnicalMessage.INTERNAL_ERROR,
                             List.of(ErrorDTO.builder()
                                     .code(TechnicalMessage.INTERNAL_ERROR.getCode())
                                     .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
-                                    .build()));
-                });
+                                    .build()))
+                );
     }
 
     public Mono<ServerResponse> getAllBootcampRelationCounts(ServerRequest request) {
@@ -74,16 +73,15 @@ public class CapacityBootcampHandlerImpl {
                 .map(capacityWithTechnologiesMapper::toDTO)
                 .collectList()
                 .flatMap(ServerResponse.ok()::bodyValue)
-                .onErrorResume(ex -> {
-                    log.error("Unexpected error occurred", ex);
-                    return buildErrorResponse(
+                .onErrorResume(ex ->
+                     buildErrorResponse(
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             TechnicalMessage.INTERNAL_ERROR,
                             List.of(ErrorDTO.builder()
                                     .code(TechnicalMessage.INTERNAL_ERROR.getCode())
                                     .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
-                                    .build()));
-                });
+                                    .build()))
+                );
     }
 
     public Mono<ServerResponse> deleteCapacitiesByBootcampId(ServerRequest request) {
@@ -91,11 +89,14 @@ public class CapacityBootcampHandlerImpl {
         return service
                 .deleteCapacitiesExclusivelyByBootcampId(bootcampId)
                 .then(ServerResponse.noContent().build())
-                .onErrorResume(ex -> {
-                    log.error("Unexpected error occurred", ex);
-                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .bodyValue("Error deleting capacities: " + ex.getMessage());
-                });
+                .onErrorResume(ex -> buildErrorResponse(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        TechnicalMessage.INTERNAL_ERROR,
+                        List.of(ErrorDTO.builder()
+                                .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                .build())
+                ));
     }
 
     private Mono<ServerResponse> buildErrorResponse(HttpStatus httpStatus,  TechnicalMessage error,

@@ -2,7 +2,6 @@ package com.capacity.microservice_capacity.domain.spi;
 
 import com.capacity.microservice_capacity.domain.model.CapacityWithTechnologies;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 

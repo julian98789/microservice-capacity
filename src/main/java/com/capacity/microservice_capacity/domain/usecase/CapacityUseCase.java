@@ -34,24 +34,24 @@ public class CapacityUseCase implements ICapacityServicePort {
     public Mono<String> registerCapacityWithTechnologies(Capacity capacity, List<Long> technologyIds) {
         return validateCapacity(capacity)
                 .then(validateTechnologyIds(technologyIds))
-                .then(capacityPersistencePort.existsByName(capacity.name()))
-                .flatMap(exists -> {
-                    if (Boolean.TRUE.equals(exists)) {
-                        return Mono.error(new BusinessException(TechnicalMessage.CAPACITY_ALREADY_EXISTS));
-                    }
-                    return capacityPersistencePort.save(capacity)
-                            .flatMap(savedCapacity ->
-                                    technologyAssociationPort.associateTechnologiesToCapacity(savedCapacity.id(), technologyIds)
-                                            .flatMap(success -> {
-                                                if (Boolean.TRUE.equals(success)) {
-                                                    return Mono.just(TechnicalMessage.CAPACITY_CREATED.name());
-                                                } else {
-                                                    return capacityPersistencePort.deleteById(savedCapacity.id())
-                                                            .then(Mono.error(new BusinessException(TechnicalMessage.CAPACITY_ASSOCIATION_FAILED)));
-                                                }
-                                            })
-                            );
-                });
+                .then(Mono.defer(() -> capacityPersistencePort.existsByName(capacity.name())
+                        .flatMap(exists -> {
+                            if (Boolean.TRUE.equals(exists)) {
+                                return Mono.error(new BusinessException(TechnicalMessage.CAPACITY_ALREADY_EXISTS));
+                            }
+                            return capacityPersistencePort.save(capacity)
+                                    .flatMap(savedCapacity ->
+                                            technologyAssociationPort.associateTechnologiesToCapacity(savedCapacity.id(), technologyIds)
+                                                    .flatMap(success -> {
+                                                        if (Boolean.TRUE.equals(success)) {
+                                                            return Mono.just(TechnicalMessage.CAPACITY_CREATED.name());
+                                                        } else {
+                                                            return capacityPersistencePort.deleteById(savedCapacity.id())
+                                                                    .then(Mono.error(new BusinessException(TechnicalMessage.CAPACITY_ASSOCIATION_FAILED)));
+                                                        }
+                                                    })
+                                    );
+                        })));
     }
 
     @Override

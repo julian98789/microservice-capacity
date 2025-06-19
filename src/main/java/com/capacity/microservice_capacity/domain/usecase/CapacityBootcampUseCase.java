@@ -106,7 +106,7 @@ public class CapacityBootcampUseCase implements ICapacityBootcampServicePort {
         return Flux.fromIterable(capacityIds)
                 .flatMap(techId -> capacityPersistencePort.existsById(techId)
                         .flatMap(exists -> {
-                            if (!exists) {
+                            if (!Boolean.TRUE.equals(exists)) {
                                 return Mono.error(new BusinessException(
                                         TechnicalMessage.CAPACITY_NOT_FOUND
 
