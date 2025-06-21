@@ -45,4 +45,13 @@ public class TechnologyAssociationAdapter implements ITechnologyAssociationPort 
                 .retrieve()
                 .bodyToMono(Void.class);
     }
+
+    @Override
+    public Mono<Long> getTechnologyCountByCapacityId(Long capacityId) {
+        return webClient.get()
+                .uri(technologyServiceUrl +"/technology/capability/{capabilityId}/technology-count", capacityId)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> Long.valueOf(response.get("technologyCount").toString()));
+    }
 }

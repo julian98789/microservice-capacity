@@ -6,6 +6,7 @@ import com.capacity.microservice_capacity.domain.exceptions.BusinessException;
 import com.capacity.microservice_capacity.domain.exceptions.TechnicalException;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.dto.CapacityBootcampAssociateRequestDTO;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.dto.CapacityBootcampCountDTO;
+import com.capacity.microservice_capacity.infrastructure.entrypoints.mapper.ICapacityTechnologySummaryMapper;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.mapper.ICapacityWithTechnologiesMapper;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.util.APIResponse;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.util.ErrorDTO;
@@ -27,6 +28,7 @@ public class CapacityBootcampHandlerImpl {
 
     private final ICapacityBootcampServicePort service;
     private final ICapacityWithTechnologiesMapper capacityWithTechnologiesMapper;
+    private final ICapacityTechnologySummaryMapper capacityTechnologySummaryMapper;
 
 
     public Mono<ServerResponse> associateCapacityBootcamp(ServerRequest request) {
@@ -113,5 +115,23 @@ public class CapacityBootcampHandlerImpl {
                     .bodyValue(apiErrorResponse);
         });
     }
+
+    public Mono<ServerResponse> getBootcampCapacityTechnologySummary(ServerRequest request) {
+        Long bootcampId = Long.valueOf(request.queryParam("bootcampId").orElseThrow());
+
+        return service.getBootcampCapacityTechnologySummary(bootcampId)
+                .map(capacityTechnologySummaryMapper::toDTO)
+                .flatMap(ServerResponse.ok()::bodyValue)
+                .onErrorResume(ex ->
+                        buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build()))
+                );
+    }
+
 
 }

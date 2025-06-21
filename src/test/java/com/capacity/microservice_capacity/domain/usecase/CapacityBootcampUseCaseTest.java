@@ -192,4 +192,30 @@ class CapacityBootcampUseCaseTest {
         StepVerifier.create(useCase.deleteCapacitiesExclusivelyByBootcampId(bootcampId))
                 .verifyComplete();
     }
+
+    @Test
+    void getBootcampCapacityTechnologySummary_success() {
+        Long bootcampId = 10L;
+        List<Long> capacityIds = List.of(1L, 2L, 3L);
+
+        when(capacityBootcampPersistencePort.findByBootcampId(bootcampId))
+                .thenReturn(Flux.fromIterable(capacityIds.stream()
+                        .map(id -> new CapacityBootcamp(null, id, bootcampId))
+                        .toList()));
+
+        when(technologyAssociationPort.getTechnologyCountByCapacityId(1L)).thenReturn(Mono.just(2L));
+        when(technologyAssociationPort.getTechnologyCountByCapacityId(2L)).thenReturn(Mono.just(3L));
+        when(technologyAssociationPort.getTechnologyCountByCapacityId(3L)).thenReturn(Mono.just(5L));
+
+        StepVerifier.create(useCase.getBootcampCapacityTechnologySummary(bootcampId))
+                .expectNextMatches(summary ->
+                        summary.capacityCount() == 3 && summary.totalTechnologyCount() == 10L)
+                .verifyComplete();
+
+        verify(capacityBootcampPersistencePort).findByBootcampId(bootcampId);
+        verify(technologyAssociationPort).getTechnologyCountByCapacityId(1L);
+        verify(technologyAssociationPort).getTechnologyCountByCapacityId(2L);
+        verify(technologyAssociationPort).getTechnologyCountByCapacityId(3L);
+    }
+
 }

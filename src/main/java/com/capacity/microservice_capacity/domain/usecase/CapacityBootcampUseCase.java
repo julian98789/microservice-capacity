@@ -5,6 +5,7 @@ import com.capacity.microservice_capacity.domain.enums.TechnicalMessage;
 import com.capacity.microservice_capacity.domain.exceptions.BusinessException;
 import com.capacity.microservice_capacity.domain.model.CapacityBootcamp;
 import com.capacity.microservice_capacity.domain.model.CapacityBootcampCount;
+import com.capacity.microservice_capacity.domain.model.CapacityTechnologySummary;
 import com.capacity.microservice_capacity.domain.model.CapacityWithTechnologies;
 import com.capacity.microservice_capacity.domain.spi.ICapacityBootcampPersistencePort;
 import com.capacity.microservice_capacity.domain.spi.ICapacityPersistencePort;
@@ -71,18 +72,34 @@ public class CapacityBootcampUseCase implements ICapacityBootcampServicePort {
                                         .collectList()
                                         .flatMap(bootcampIds -> {
                                             if (bootcampIds.size() == 1 && bootcampIds.get(0).equals(bootcampId)) {
-                                                // Solo asociada a este bootcamp: eliminar capacidad, relación, y tecnologías asociadas
                                                 return technologyAssociationPort.deleteTechnologiesExclusivelyByCapacityId(capacityId)
                                                         .then(capacityPersistencePort.deleteById(capacityId))
                                                         .then(capacityBootcampPersistencePort.deleteByCapacityIdAndBootcampId(capacityId, bootcampId));
                                             } else {
-                                                // Asociada a varios bootcamps: solo elimina la relación
                                                 return capacityBootcampPersistencePort.deleteByCapacityIdAndBootcampId(capacityId, bootcampId);
                                             }
                                         })
                         )
                 )
                 .then();
+    }
+
+    @Override
+    public Mono<CapacityTechnologySummary> getBootcampCapacityTechnologySummary(Long bootcampId) {
+        return capacityBootcampPersistencePort.findByBootcampId(bootcampId)
+                .map(CapacityBootcamp::capacityId)
+                .collectList()
+                .flatMap(capacityIds -> {
+                    long capacityCount = capacityIds.size();
+
+                    return Flux.fromIterable(capacityIds)
+                            .flatMap(technologyAssociationPort::getTechnologyCountByCapacityId)
+                            .reduce(0L, Long::sum)
+                            .map(totalTechs -> new CapacityTechnologySummary(
+                                    capacityCount,
+                                    totalTechs
+                            ));
+                });
     }
 
     private Mono<Void> validateNoDuplicates(List<Long> technologyIds) {

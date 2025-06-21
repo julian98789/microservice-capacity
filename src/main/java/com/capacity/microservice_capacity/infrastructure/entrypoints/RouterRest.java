@@ -197,6 +197,7 @@ public class RouterRest {
                         GET("/capacity/bootcamp/capacities-technologies"),
                         capacityBootcampHandler::getCapacitiesAndTechnologiesByBootcamp)
                 .andRoute(DELETE("/capacity/bootcamp/{bootcampId}/exclusive-delete"),
-                        capacityBootcampHandler::deleteCapacitiesByBootcampId);
+                        capacityBootcampHandler::deleteCapacitiesByBootcampId)
+                .andRoute(GET("/capacity/bootcamp/summary"), capacityBootcampHandler::getBootcampCapacityTechnologySummary);
     }
 }

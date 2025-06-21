@@ -7,6 +7,7 @@ import com.capacity.microservice_capacity.domain.exceptions.TechnicalException;
 import com.capacity.microservice_capacity.domain.model.CapacityBootcampCount;
 import com.capacity.microservice_capacity.domain.model.CapacityWithTechnologies;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.dto.CapacityBootcampAssociateRequestDTO;
+import com.capacity.microservice_capacity.infrastructure.entrypoints.mapper.ICapacityTechnologySummaryMapper;
 import com.capacity.microservice_capacity.infrastructure.entrypoints.mapper.ICapacityWithTechnologiesMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,12 +35,15 @@ class CapacityBootcampHandlerImplTest {
     @Mock
     private ICapacityWithTechnologiesMapper mapper;
 
+    @Mock
+    ICapacityTechnologySummaryMapper capacityTechnologySummaryMapper;
+
     private CapacityBootcampHandlerImpl handler;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        handler = new CapacityBootcampHandlerImpl(service, mapper);
+        handler = new CapacityBootcampHandlerImpl(service, mapper,capacityTechnologySummaryMapper);
     }
 
     @Test
@@ -117,5 +121,33 @@ class CapacityBootcampHandlerImplTest {
         ServerResponse response = handler.deleteCapacitiesByBootcampId(request).block();
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.statusCode());
+    }
+
+    @Test
+    void getBootcampCapacityTechnologySummary_success() {
+        ServerRequest request = mock(ServerRequest.class);
+        when(request.queryParam("bootcampId")).thenReturn(java.util.Optional.of("1"));
+
+        var summary = new com.capacity.microservice_capacity.domain.model.CapacityTechnologySummary(3L, 12L);
+        var dto = new com.capacity.microservice_capacity.infrastructure.entrypoints.dto.CapacityTechnologySummaryDTO(3L, 12L);
+
+        when(service.getBootcampCapacityTechnologySummary(1L)).thenReturn(Mono.just(summary));
+        when(capacityTechnologySummaryMapper.toDTO(summary)).thenReturn(dto);
+
+        ServerResponse response = handler.getBootcampCapacityTechnologySummary(request).block();
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.statusCode());
+    }
+
+    @Test
+    void getBootcampCapacityTechnologySummary_internalServerError() {
+        ServerRequest request = mock(ServerRequest.class);
+        when(request.queryParam("bootcampId")).thenReturn(java.util.Optional.of("1"));
+
+        when(service.getBootcampCapacityTechnologySummary(1L)).thenReturn(Mono.error(new RuntimeException("Unexpected")));
+
+        ServerResponse response = handler.getBootcampCapacityTechnologySummary(request).block();
+        assertNotNull(response);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode());
     }
 }
